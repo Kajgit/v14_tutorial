@@ -1,22 +1,28 @@
 const {EmbedBuilder} = require("@discordjs/builders");
-const {GuildMember, Embed} = require("discord.js");
+const {GuildMember, Embed, InteractionCollector} = require("discord.js");
+const Schema = require("../../Models/Welcome");
 
 module.exports = {
     name: "guildMemberAdd",
-    execute(member) {
-        const {user, guild} = member;
-        const welcomeChannel = member.guild.channels.cache.get('1011076507545894912');
-        const welcomeMessage = `Welcome <@${member.id}> to the guild!`;
-        const memberRole = '1011082103435313305';
+    async execute(member) {
+        Schema.findOne({Guild: member.guild.id}, async (err, data) => {
+            if (!data) return;
+            let channel = data.Channel;
+            let Msg = data.Msg || " ";
+            let Role = data.Role;
 
-        const welcomeEmbed = new EmbedBuilder()
-        .setTitle("**New member!**")
-        .setDescription(welcomeMessage)
-        .setColor(0x037821)
-        .addFields({name:'Total members', value: `${guild.memberCount}`})
-        .setTimestamp();
+            const {user, guild} = member;
+            const welcomeChannel = member.guild.channels.cache.get(data.Channel);
 
-        welcomeChannel.send({embeds: [welcomeEmbed]});
-        member.roles.add(memberRole);
+            const welcomeEmbed = new EmbedBuilder()
+            .setTitle("**New member!**")
+            .setDescription(data.Msg)
+            .setColor(0x037821)
+            .addFields({name: 'Total members', value: `${guild.memberCount}`})
+            .setTimestamp();
+
+            welcomeChannel.send({embeds: [welcomeEmbed]});
+            member.roles.add(data.Role);
+        })
     }
 }
