@@ -1,4 +1,4 @@
 {
-    "token": "YOUR TOKEN HERE",
-    "mongodb": "mongodb+srv://kajdev:<password>@v14.txcrszw.mongodb.net/?retryWrites=true&w=majority"
+    "token": "your token here",
+    "mongodb": "your mongodb link here"
 }
