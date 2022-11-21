@@ -486,28 +486,28 @@ function handleLogs(client) {
     });
 
     // User Banned
-    client.on("guildBanAdd", (guild, user) => {
+    client.on("guildBanAdd", ({guild, user}) => {
 
         const embed = new EmbedBuilder()
             .setTitle('User Banned')
             .setColor('Red')
             .setDescription(`User: ${user} (\`${user.id}\`)\n\`${user.tag}\``,
-                user.user.displayAvatarURL({ dynamic: true }));
+                user.displayAvatarURL({ dynamic: true }));
 
-        return send_log(role.guild.id, embed);
+        return send_log(guild.id, embed);
 
     });
 
     // User Unbanned
-    client.on("guildBanRemove", (guild, user) => {
+    client.on("guildBanRemove", ({guild, user}) => {
 
         const embed = new EmbedBuilder()
             .setTitle('User Unbanned')
             .setColor('Green')
             .setDescription(`User: ${user} (\`${user.id}\`)\n\`${user.tag}\``,
-                user.user.displayAvatarURL({ dynamic: true }));
+                user.displayAvatarURL({ dynamic: true }));
 
-        return send_log(role.guild.id, embed);
+        return send_log(guild.id, embed);
 
     });
 
