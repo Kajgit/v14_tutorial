@@ -1,44 +1,67 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, ButtonBuilder, PermissionFlagsBits, ButtonStyle, ActionRowBuilder } = require("discord.js");
+const suggestionSchema = require("../../Models/Suggestion");
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("suggest")
-        .setDescription("Suggest something.")
+        .setDescription("Place a suggestion.")
         .addStringOption(option =>
-            option.setName("name")
-                .setDescription("Name your suggestion.")
+            option.setName("type")
+                .setDescription("Select an option.")
                 .setRequired(true)
+                .addChoices(
+                    { name: "Youtube Video", value: "Youtube" },
+                    { name: "Discord", value: "Discord" },
+                    { name: "Patreon", value: "Patreon" },
+                    { name: "Services", value: "Services" },
+                    { name: "Other", value: "Other" },
+                )
         )
         .addStringOption(option =>
             option.setName("description")
-                .setDescription("Describe your suggestion.")
+                .setDescription("Describe your suggestion clearly.")
                 .setRequired(true)
         ),
 
     async execute(interaction) {
-        const { guild, options, member } = interaction;
+        const { options, guildId, member, user, guild } = interaction;
 
-        const name = options.getString("name");
+        const type = options.getString("type");
         const description = options.getString("description");
 
+        const channel = guild.channels.cache.get("1033927456756879370"); // only non-multi-guilded part
+
         const embed = new EmbedBuilder()
-            .setColor("Green")
-            .setDescription(`A suggestion made by ${member}`)
+            .setColor("Orange")
+            .setAuthor({ name: user.tag, iconURL: user.displayAvatarURL({ dynamic: true }) })
             .addFields(
-                { name: "Suggestion", value: `${name}` },
-                { name: "Description", value: `${description}` },
+                { name: "Suggestion:", value: description, inline: false },
+                { name: "Type:", value: type, inline: true },
+                { name: "Status:", value: "Pending", inline: true },
             )
-            .setFooter({ text: member.user.tag, iconURL: member.displayAvatarURL({ dynamic: true }) });
+            .setTimestamp();
 
-        await guild.channels.cache.get('1028762124014600193').send({
-            embeds: ([embed]),
-        }).then((s) => {
-            s.react('✅');
-            s.react('❌');
-        }).catch((err) => {
-            throw err;
-        });
+        const buttons = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId("suggest-accept").setLabel("Accept").setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId("suggest-decline").setLabel("Decline").setStyle(ButtonStyle.Danger), // you can use this format, but I will change it to this:
+        );
 
-        interaction.reply({ content: ":white_check_mark: | Your suggestion has been succesfully submitted.", ephemeral: true });
+        try {
+            const m = await channel.send({ embeds: [embed], components: [buttons], fetchReply: true });
+            await channel.send({ content: "Use `/suggest` in the bot-commands channel to submit your suggestion. " });
+            await interaction.reply({ content: "Suggestion was succesfully sent to the channel.", ephemeral: true });
+
+            await suggestionSchema.create({
+                GuildID: guildId, MessageID: m.id, Details: [
+                    {
+                        MemberID: member.id,
+                        Type: type,
+                        Suggestion: description
+                    }
+                ]
+            });
+        } catch (err) {
+            console.log(err);
+        }
     }
 }

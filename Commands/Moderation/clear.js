@@ -8,8 +8,6 @@ module.exports = {
     .addIntegerOption(option =>
         option.setName('amount')
         .setDescription('Amount of messages to clear.')
-        .setMinValue(1)
-        .setMaxValue(99)
         .setRequired(true)
         )
     .addUserOption(option =>
